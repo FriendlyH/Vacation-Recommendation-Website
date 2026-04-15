@@ -19,7 +19,7 @@ from flask_cors import CORS
 # ------------------------------------------------------------------------------
 ROOT = Path(__file__).resolve().parent
 FRONTEND_DIST = Path(
-    os.getenv("FRONTEND_DIST", ROOT / "templates/vacation-frontend/dist")
+    os.getenv("FRONTEND_DIST", ROOT / "vacation-frontend/dist")
 )
 DATA_PATH = Path(
     os.getenv("TRAVEL_DATA_PATH", ROOT / "travel.csv")
@@ -289,7 +289,7 @@ except Exception as e:
 def health():
     return jsonify({"status": "ok"})
 
-@app.route("/recommend", methods=["POST", "GET", "OPTIONS"])
+@app.route("/recommend", methods=["POST", "GET"])
 def recommend():
     if request.method == "GET":
         return jsonify(

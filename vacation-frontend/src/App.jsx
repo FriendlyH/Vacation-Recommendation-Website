@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import {
   Container, Box, Typography, Stack,
   Button, TextField, MenuItem,
@@ -95,6 +95,25 @@ export default function App() {
   const [countryName, setCountryName] = useState('Korea, Republic of');
   const [lat, setLat] = useState(37.5665);
   const [lon, setLon] = useState(126.9780);
+
+  // Automatically fetch city/country when lat/lon changes
+  useEffect(() => {
+    const timer = setTimeout(async () => {
+      try {
+        if (lat !== '' && lon !== '') {
+          const res = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`);
+          const data = await res.json();
+          if (data) {
+            setCity(data.city || data.locality || '');
+            setCountryName(data.countryName || '');
+          }
+        }
+      } catch (err) {
+        console.error("Failed to reverse geocode:", err);
+      }
+    }, 500); // 500ms debounce
+    return () => clearTimeout(timer);
+  }, [lat, lon]);
 
   /* ====== Query/result state ====== */
   const [loading, setLoading] = useState(false);
