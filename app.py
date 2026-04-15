@@ -14,9 +14,7 @@ import pandas as pd
 from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
 
-# ------------------------------------------------------------------------------
 # Config
-# ------------------------------------------------------------------------------
 ROOT = Path(__file__).resolve().parent
 FRONTEND_DIST = Path(
     os.getenv("FRONTEND_DIST", ROOT / "vacation-frontend/dist")
@@ -32,9 +30,7 @@ logging.basicConfig(
     format="%(asctime)s | %(levelname)s | %(message)s",
 )
 
-# ------------------------------------------------------------------------------
 # App
-# ------------------------------------------------------------------------------
 app = Flask(__name__, static_folder=None)
 CORS(
     app,
@@ -44,9 +40,8 @@ CORS(
     },
 )
 
-# ------------------------------------------------------------------------------
+
 # Helpers / data prep
-# ------------------------------------------------------------------------------
 SEASONS_MAP: Dict[str, List[int]] = {
     "Mar-May": [3, 4, 5],
     "Jun-Aug": [6, 7, 8],
@@ -266,9 +261,7 @@ def _round_cols(df: pd.DataFrame, cols: Iterable[str], ndigits: int = 2) -> pd.D
             df[c] = df[c].round(ndigits)
     return df
 
-# ------------------------------------------------------------------------------
 # Load data once
-# ------------------------------------------------------------------------------
 logging.info("Frontend dist: %s | index.html=%s (mtime: %s)",
              FRONTEND_DIST, FRONTEND_DIST.joinpath("index.html").exists(),
              _mtime(FRONTEND_DIST / "index.html"))
@@ -282,9 +275,7 @@ except Exception as e:
     logging.exception("Failed to load data")
     raise
 
-# ------------------------------------------------------------------------------
 # Routes
-# ------------------------------------------------------------------------------
 @app.get("/health")
 def health():
     return jsonify({"status": "ok"})
@@ -422,8 +413,6 @@ def serve_frontend(path: str):
     resp.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
     return resp
 
-# ------------------------------------------------------------------------------
 # Main
-# ------------------------------------------------------------------------------
 if __name__ == "__main__":
     app.run(host="127.0.0.1", port=int(os.getenv("PORT", 5000)), debug=True)
