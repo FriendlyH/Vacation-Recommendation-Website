@@ -95,9 +95,11 @@ export default function App() {
   const [countryName, setCountryName] = useState('Korea, Republic of');
   const [lat, setLat] = useState(37.5665);
   const [lon, setLon] = useState(126.9780);
+  const [lastEdited, setLastEdited] = useState('coords'); // 'coords' | 'address'
 
   // Automatically fetch city/country when lat/lon changes
   useEffect(() => {
+    if (lastEdited !== 'coords') return;
     const timer = setTimeout(async () => {
       try {
         if (lat !== '' && lon !== '') {
@@ -113,7 +115,28 @@ export default function App() {
       }
     }, 500); // 500ms debounce
     return () => clearTimeout(timer);
-  }, [lat, lon]);
+  }, [lat, lon, lastEdited]);
+
+  // Automatically fetch lat/lon when city/country changes
+  useEffect(() => {
+    if (lastEdited !== 'address') return;
+    const timer = setTimeout(async () => {
+      try {
+        if (city !== '' || countryName !== '') {
+          const query = encodeURIComponent(`${city} ${countryName}`.trim());
+          const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${query}&count=1&language=en&format=json`);
+          const data = await res.json();
+          if (data && data.results && data.results.length > 0) {
+            setLat(data.results[0].latitude);
+            setLon(data.results[0].longitude);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to forward geocode:", err);
+      }
+    }, 800); // 800ms debounce
+    return () => clearTimeout(timer);
+  }, [city, countryName, lastEdited]);
 
   /* ====== Query/result state ====== */
   const [loading, setLoading] = useState(false);
@@ -138,6 +161,7 @@ export default function App() {
       (pos) => {
         setLat(pos.coords.latitude);
         setLon(pos.coords.longitude);
+        setLastEdited('coords');
       },
       (e) => setErr(`Failed to get location: ${e.message}`)
     );
@@ -200,22 +224,22 @@ export default function App() {
           {/* Location block */}
           <Typography variant="h6">Your Location</Typography>
           <Stack direction="row" spacing={2}>
-            <TextField label="City" value={city} onChange={e => setCity(e.target.value)} fullWidth />
-            <TextField label="Country" value={countryName} onChange={e => setCountryName(e.target.value)} fullWidth />
+            <TextField label="City" value={city} onChange={e => { setCity(e.target.value); setLastEdited('address'); }} fullWidth />
+            <TextField label="Country" value={countryName} onChange={e => { setCountryName(e.target.value); setLastEdited('address'); }} fullWidth />
           </Stack>
           <Stack direction="row" spacing={2} alignItems="center">
             <TextField
               label="Latitude"
               type="number"
               value={lat}
-              onChange={e => setLat(Number(e.target.value))}
+              onChange={e => { setLat(Number(e.target.value)); setLastEdited('coords'); }}
               fullWidth
             />
             <TextField
               label="Longitude"
               type="number"
               value={lon}
-              onChange={e => setLon(Number(e.target.value))}
+              onChange={e => { setLon(Number(e.target.value)); setLastEdited('coords'); }}
               fullWidth
             />
             <Button variant="outlined" startIcon={<MyLocationIcon />} onClick={useMyLocation}>
